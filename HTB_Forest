@@ -93,7 +93,7 @@ Read data files from: /usr/bin/../share/nmap
 
 
 Adding FOREST domain to hosts file at /etc/hosts
-[Alt text](./assets/add_host_to_hosts.png)
+![Alt text](./assets/add_host_to_hosts.png)
 
 Enumerating smb on port 139,445
 
